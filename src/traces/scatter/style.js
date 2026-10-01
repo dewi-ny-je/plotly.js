@@ -24,7 +24,7 @@ function style(gd) {
     });
 
     s.selectAll('g.trace path.js-line')
-        .call(Drawing.lineGroupStyle);
+        .call(Drawing.lineGroupStyle, undefined, undefined, undefined, gd);
 
     s.selectAll('g.trace path.js-fill')
         .call(Drawing.fillGroupStyle, gd, false);

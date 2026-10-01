@@ -276,6 +276,57 @@ module.exports = {
             anim: true,
             description: 'Sets the line color.'
         },
+        gradient: {
+            type: {
+                valType: 'enumerated',
+                values: ['horizontal', 'vertical', 'none'],
+                dflt: 'none',
+                editType: 'style',
+                description: [
+                    'Sets the orientation of the color gradient along the line.',
+                    'With *vertical*, the line color changes with the y value.',
+                    'With *horizontal*, the line color changes with the x value.'
+                ].join(' ')
+            },
+            start: {
+                valType: 'number',
+                editType: 'style',
+                description: [
+                    'Sets the axis value where the gradient starts,',
+                    'on the x axis for *horizontal* and on the y axis for *vertical*.',
+                    'The line takes the first color of `line.gradient.colorscale` at this value and below.',
+                    'If omitted, the gradient starts at the lowest value of the trace along that axis.'
+                ].join(' ')
+            },
+            stop: {
+                valType: 'number',
+                editType: 'style',
+                description: [
+                    'Sets the axis value where the gradient ends,',
+                    'on the x axis for *horizontal* and on the y axis for *vertical*.',
+                    'The line takes the last color of `line.gradient.colorscale` at this value and above.',
+                    'If omitted, the gradient ends at the highest value of the trace along that axis.'
+                ].join(' ')
+            },
+            colorscale: {
+                valType: 'colorscale',
+                editType: 'style',
+                description: [
+                    'Sets the line gradient colors as a color scale.',
+                    'The color scale maps 0 to `line.gradient.start` and 1 to `line.gradient.stop`.',
+                    'To change the color abruptly at a threshold, give two entries at the same position,',
+                    'for example [[0, *green*], [0.5, *green*], [0.5, *red*], [1, *red*]].'
+                ].join(' ')
+            },
+            editType: 'style',
+            description: [
+                'Sets a color gradient along the line, as `fillgradient` does for the fill.',
+                'If not specified, the line uses `line.color`.',
+                'If specified, `line.color` does not color the line. It defaults to the average color',
+                'of the gradient, and it still sets the color of the hover label and of other items',
+                'that take the line color.'
+            ].join(' ')
+        },
         width: {
             valType: 'number',
             min: 0,

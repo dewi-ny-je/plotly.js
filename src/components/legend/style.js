@@ -111,11 +111,19 @@ module.exports = function style(s, gd, legend) {
             }
         };
 
+        // Draw `line.gradient` from left to right in the legend, whatever its orientation.
+        const lineGradientAttr = showLine && (trace.line || {}).gradient;
+        const hasLineGradient = !!lineGradientAttr && lineGradientAttr.type !== 'none';
+
         var lineGradient = function (s) {
             if (s.size()) {
                 var gradientID = 'legendline-' + trace.uid;
                 Drawing.lineGroupStyle(s);
-                Drawing.gradient(s, gd, gradientID, getGradientDirection(reversescale), colorscale, 'stroke');
+                if (hasLineGradient) {
+                    Drawing.gradient(s, gd, gradientID, 'horizontalreversed', lineGradientAttr.colorscale, 'stroke');
+                } else {
+                    Drawing.gradient(s, gd, gradientID, getGradientDirection(reversescale), colorscale, 'stroke');
+                }
             }
         };
 
@@ -160,9 +168,10 @@ module.exports = function style(s, gd, legend) {
         // though there *is* no vertical variation in this case.
         // so add an invisibly small angle to the line
         // This issue (and workaround) exist across (Mac) Chrome, FF, and Safari
-        line.attr('d', pathStart + (showGradientLine ? 'l' + itemWidth + ',0.0001' : 'h' + itemWidth)).call(
-            showLine ? Drawing.lineGroupStyle : lineGradient
-        );
+        line.attr(
+            'd',
+            pathStart + (showGradientLine || hasLineGradient ? 'l' + itemWidth + ',0.0001' : 'h' + itemWidth)
+        ).call(showLine && !hasLineGradient ? Drawing.lineGroupStyle : lineGradient);
     }
 
     function stylePoints(d) {
