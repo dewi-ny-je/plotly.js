@@ -1332,6 +1332,22 @@ describe('scatter gradients', () => {
         assertBounds(getGradient('scatterfill', gd._fullData[1]), 'y', gd._fullLayout.yaxis2, 5, 30);
     });
 
+    it('draws fillgradient with a single bound on a log axis', async () => {
+        await Plotly.newPlot(
+            gd,
+            [
+                {
+                    y: [1, 100, 10],
+                    fill: 'toself',
+                    fillgradient: { type: 'vertical', start: 2, colorscale }
+                }
+            ],
+            { width: 400, height: 400, yaxis: { type: 'log' } }
+        );
+
+        assertBounds(getGradient('scatterfill', gd._fullData[0]), 'y', gd._fullLayout.yaxis, 2, 100);
+    });
+
     it('ignores fillgradient start and stop with type *radial*', async () => {
         await Plotly.newPlot(gd, [
             {

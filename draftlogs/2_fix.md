@@ -1,2 +1,0 @@
- - Fix `fillgradient` bounds in `scatter` traces after a zoom or a pan, and with a single `start` or `stop` on secondary and log axes [[#2](https://github.com/plotly/plotly.js/pull/2)]
- - Fix an error for a *radial* `fillgradient` with `start` or `stop` [[#2](https://github.com/plotly/plotly.js/pull/2)]
