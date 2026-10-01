@@ -54,3 +54,5 @@ module.exports = function fillColorDefaults(traceIn, traceOut, defaultColor, coe
         defaultColor, 0.5
     ));
 };
+
+module.exports.averageColors = averageColors;

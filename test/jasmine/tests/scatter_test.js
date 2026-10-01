@@ -164,6 +164,49 @@ describe('Test scatter', function() {
             expect(traceOut.ycalendar).toBe('ethiopian');
         });
 
+        describe('line.gradient', () => {
+            const colorscale = [
+                [0, 'blue'],
+                [1, 'red']
+            ];
+
+            function _supply(patch) {
+                traceIn = Lib.extendFlat({ mode: 'lines', x: [1, 2, 3], y: [2, 1, 2] }, patch);
+                traceOut = { visible: true };
+                supplyDefaults(traceIn, traceOut, defaultColor, layout);
+            }
+
+            it('ignores the gradient settings when type is *none*', () => {
+                _supply({ line: { gradient: { start: 0, stop: 1, colorscale } } });
+
+                expect(traceOut.line.gradient.type).toBe('none');
+                expect(traceOut.line.gradient.start).toBeUndefined();
+                expect(traceOut.line.gradient.stop).toBeUndefined();
+                expect(traceOut.line.gradient.colorscale).toBeUndefined();
+                expect(traceOut.line.color).toBe(defaultColor);
+            });
+
+            it('coerces the gradient settings and defaults line.color to the average gradient color', () => {
+                _supply({ line: { gradient: { type: 'vertical', start: 0, stop: 10, colorscale } } });
+
+                expect(traceOut.line.gradient).toEqual({ type: 'vertical', start: 0, stop: 10, colorscale });
+                expect(traceOut.line.color).toBe('rgb(128, 0, 128)');
+            });
+
+            it('keeps an explicit line.color', () => {
+                _supply({ line: { color: 'green', gradient: { type: 'horizontal', colorscale } } });
+
+                expect(traceOut.line.gradient.type).toBe('horizontal');
+                expect(traceOut.line.color).toBe('green');
+            });
+
+            it('does not coerce line.gradient without lines', () => {
+                _supply({ mode: 'markers', line: { gradient: { type: 'vertical', colorscale } } });
+
+                expect((traceOut.line || {}).gradient).toBeUndefined();
+            });
+        });
+
         describe('selected / unselected attribute containers', function() {
             function _supply(patch) {
                 traceIn = Lib.extendFlat({
@@ -1186,6 +1229,70 @@ describe('scatter gradients', () => {
         expect(Number(gradient.getAttribute(`${attr}1`))).toBeCloseTo(ax.c2p(start), 1, `${attr}1`);
         expect(Number(gradient.getAttribute(`${attr}2`))).toBeCloseTo(ax.c2p(stop), 1, `${attr}2`);
     }
+
+    it('applies line.gradient to every line segment and follows the axis range', async () => {
+        await Plotly.newPlot(
+            gd,
+            [
+                {
+                    x: [0, 1, 2, 3],
+                    y: [1, null, 3, 2],
+                    line: { gradient: { type: 'vertical', start: 1, stop: 3, colorscale } }
+                }
+            ],
+            { width: 400, height: 400, yaxis: { range: [0, 4] } }
+        );
+
+        const trace = gd._fullData[0];
+        const gradient = getGradient('scatterline', trace);
+        const paths = gd.querySelectorAll('.scatterlayer .js-line');
+        expect(paths.length).toBe(2);
+        paths.forEach((path) => {
+            expect(path.style.stroke).toContain(gradient.id);
+        });
+        assertBounds(gradient, 'y', gd._fullLayout.yaxis, 1, 3);
+
+        await Plotly.relayout(gd, 'yaxis.range', [0, 8]);
+        assertBounds(getGradient('scatterline', trace), 'y', gd._fullLayout.yaxis, 1, 3);
+    });
+
+    it('uses the data range of the trace when line.gradient has no start and stop', async () => {
+        await Plotly.newPlot(
+            gd,
+            [
+                {
+                    x: [10, 20, 30],
+                    y: [1, 10, 100],
+                    line: { gradient: { type: 'horizontal', colorscale } }
+                },
+                {
+                    x: [10, 20, 30],
+                    y: [1, 10, 100],
+                    line: { gradient: { type: 'vertical', colorscale } }
+                }
+            ],
+            { width: 400, height: 400, yaxis: { type: 'log' } }
+        );
+
+        assertBounds(getGradient('scatterline', gd._fullData[0]), 'x', gd._fullLayout.xaxis, 10, 30);
+        assertBounds(getGradient('scatterline', gd._fullData[1]), 'y', gd._fullLayout.yaxis, 1, 100);
+    });
+
+    it('draws line.gradient in the legend and returns to line.color with type *none*', async () => {
+        await Plotly.newPlot(gd, [{ y: [1, 3, 2], line: { gradient: { type: 'vertical', colorscale } } }], {
+            showlegend: true
+        });
+
+        const trace = gd._fullData[0];
+        const legendLine = () => gd.querySelector('.legend .legendlines path');
+        const plotLine = () => gd.querySelector('.scatterlayer .js-line');
+        expect(legendLine().style.stroke).toContain(getGradient('legendline', trace).id);
+        expect(plotLine().style.stroke).toContain(getGradient('scatterline', trace).id);
+
+        await Plotly.restyle(gd, 'line.gradient.type', 'none');
+        expect(legendLine().style.stroke).toBe('rgb(31, 119, 180)');
+        expect(plotLine().style.stroke).toBe('rgb(31, 119, 180)');
+    });
 
     it('updates fillgradient bounds with the axis range', async () => {
         await Plotly.newPlot(

@@ -47,7 +47,7 @@ module.exports = function supplyDefaults(traceIn, traceOut, defaultColor, layout
     }
 
     if (subTypes.hasLines(traceOut)) {
-        handleLineDefaults(traceIn, traceOut, defaultColor, layout, coerce, { backoff: true });
+        handleLineDefaults(traceIn, traceOut, defaultColor, layout, coerce, { backoff: true, gradient: true });
         handleLineShapeDefaults(traceIn, traceOut, coerce);
         coerce('connectgaps');
         coerce('line.simplify');

@@ -166,27 +166,45 @@ drawing.crispRound = function (gd, lineWidth, dflt) {
     return Math.round(lineWidth);
 };
 
-drawing.singleLineStyle = function (d, s, lw, lc, ld) {
+drawing.singleLineStyle = function (d, s, lw, lc, ld, gd) {
     s.style('fill', 'none');
-    var line = (((d || [])[0] || {}).trace || {}).line || {};
+    const trace = ((d || [])[0] || {}).trace || {};
+    const line = trace.line || {};
     var lw1 = lw || line.width || 0;
     var dash = ld || line.dash || '';
 
-    Color.stroke(s, lc || line.color);
+    // `s` can be a transition. Apply the gradient to the node, because a stroke color tween would replace it.
+    if (!setLineGradient(d3.select(s.node()), trace, gd)) Color.stroke(s, lc || line.color);
     drawing.dashLine(s, dash, lw1);
 };
 
-drawing.lineGroupStyle = function (s, lw, lc, ld) {
+drawing.lineGroupStyle = function (s, lw, lc, ld, gd) {
     s.style('fill', 'none').each(function (d) {
-        var line = (((d || [])[0] || {}).trace || {}).line || {};
+        const trace = ((d || [])[0] || {}).trace || {};
+        const line = trace.line || {};
         var lw1 = lw || line.width || 0;
         var dash = ld || line.dash || '';
 
-        d3.select(this)
-            .call(Color.stroke, lc || line.color)
-            .call(drawing.dashLine, dash, lw1);
+        const el = d3.select(this).call(drawing.dashLine, dash, lw1);
+        if (!setLineGradient(el, trace, gd)) el.call(Color.stroke, lc || line.color);
     });
 };
+
+/**
+ * Apply `line.gradient` of a cartesian scatter trace to the stroke of `sel`.
+ *
+ * @param sel - d3 selection of line paths. It must not be a transition.
+ * @param trace - the full trace
+ * @param gd - the graph div. If it is undefined, the function does nothing.
+ * @returns true if the function applied a gradient, false if the caller must apply `line.color`
+ */
+function setLineGradient(sel, trace, gd) {
+    const gradient = (trace.line || {}).gradient;
+    if (!gd || !gradient || gradient.type === 'none') return false;
+
+    axisGradient(sel, trace, gd, gradient, 'scatterline-' + trace.uid, 'stroke');
+    return true;
+}
 
 drawing.dashLine = function (s, dash, lineWidth) {
     lineWidth = +lineWidth || 0;
@@ -273,7 +291,7 @@ function setFillStyle(sel, trace, gd, forLegend) {
  * @param sel - d3 selection to apply the gradient to
  * @param trace - the full trace. It must have `_xA`, `_yA` and `_extremes`.
  * @param gd - the graph div
- * @param gradient - a `fillgradient` container with `type` *horizontal* or *vertical*
+ * @param gradient - a `fillgradient` or `line.gradient` container with `type` *horizontal* or *vertical*
  * @param gradientID - an identifier for the gradient, unique in the plot
  * @param prop - 'fill' or 'stroke'
  *

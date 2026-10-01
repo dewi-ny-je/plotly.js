@@ -305,12 +305,12 @@ function plotOne(gd, idx, plotinfo, cdscatter, cdscatterAll, element, transition
                     if(isEnter) {
                         transition(el.style('opacity', 0)
                             .attr('d', thispath)
-                            .call(Drawing.lineGroupStyle))
+                            .call(Drawing.lineGroupStyle, undefined, undefined, undefined, gd))
                                 .style('opacity', 1);
                     } else {
                         var sel = transition(el);
                         sel.attr('d', thispath);
-                        Drawing.singleLineStyle(cdscatter, sel);
+                        Drawing.singleLineStyle(cdscatter, sel, undefined, undefined, undefined, gd);
                     }
                 }
             };

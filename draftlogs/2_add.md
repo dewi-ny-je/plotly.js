@@ -1,0 +1,1 @@
+ - Add `line.gradient` to `scatter` traces to color a line by its x or y value [[#2](https://github.com/plotly/plotly.js/pull/2)]
